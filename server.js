@@ -16,7 +16,7 @@ app.use(
 app.use(bodyParser());
 // response
 app.use(ctx => {
-  ctx.body = '草';
+  ctx.body = '撒大苏打';
 });
 
 
