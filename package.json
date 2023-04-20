@@ -1,6 +1,7 @@
 {
   "name": "yttkdownload",
   "version": "1.0.0",
+  "type": "module",
   "description": "use to download youtube and tiktok videos without watermark",
   "main": "index.js",
   "scripts": {
