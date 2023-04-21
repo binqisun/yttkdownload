@@ -5,6 +5,14 @@ import minimist from 'minimist';
 import Koa from 'koa';
 import Router from 'koa-router';
 
+import ytdlp from 'node-ytdlp-wrap';
+import fs from 'fs';
+
+// const link = 'https://www.youtube.com/watch?v=k6VTwftuLB8';
+//
+// const stream = ytdlp.stream(link, ['-f', 'bestvideo']);
+// stream.pipe(fs.createWriteStream('exa3.mp4'));
+
 // 连接mongodb
 const processParams = minimist(process.argv.slice(2));
 const { host = ':27017', dbString = 'mongodb://localhost:27017' } = processParams;
@@ -88,6 +96,30 @@ router.get('/', async (ctx, next) => {
     })
     .post("/testInert", async (ctx, next) => {
 				const { method, path, body, host } = ctx.request;
+				const link = body.link;
+
+				var stream = ytdlp.stream(link, ['-f', 'bestvideo']);
+				console.log('stream:', stream);
+				// download to your lock folder
+				// stream.pipe(fs.createWriteStream('exa3.mp4'));
+				// const readableStream = fs.createReadStream(stream, {
+				//   encoding: 'utf8'
+				// });
+				// let data = '';
+				// let chunk;
+
+				// try {
+				// 	readableStream.on('readable', function() {
+				// 	  while ((chunk = readableStream.read()) != null) {
+				// 	    data += chunk;
+				// 	  }
+				// 	});
+				// 	readableStream.on('end', function() {
+				// 	  console.log(data);
+				// 	});
+				// } catch(err) {
+				//   console.error('caught while emitting:', err.message);
+				// }
 
 				try {
 					//根据path 获取handlers 里面的方法
