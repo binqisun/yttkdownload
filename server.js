@@ -1,5 +1,6 @@
 import cors from '@koa/cors';
 import bodyParser from 'koa-bodyparser';
+import fetch from 'node-fetch';
 import { MongoClient, ObjectId } from 'mongodb';
 import minimist from 'minimist';
 import Koa from 'koa';
@@ -7,11 +8,6 @@ import Router from 'koa-router';
 
 import ytdlp from 'node-ytdlp-wrap';
 import fs from 'fs';
-
-// const link = 'https://www.youtube.com/watch?v=k6VTwftuLB8';
-//
-// const stream = ytdlp.stream(link, ['-f', 'bestvideo']);
-// stream.pipe(fs.createWriteStream('exa3.mp4'));
 
 // 连接mongodb
 const processParams = minimist(process.argv.slice(2));
@@ -37,14 +33,17 @@ const handlers = {
 	},
 
 	// 日志记录搜索
-	async testInert(params) {
-		const { pid, testName } = params;
-		if (!testName) {
-			throw '必须指定测试名';
-		}
+	async testInert(params, arr2) {
+		// const { pid, testName } = params;
+		// if (!testName) {
+		// 	throw '必须指定测试名';
+		// }
+		// console.log('arr2', arr2);
 		const { insertedId } = await db.collection('test').insertOne({
-			pid,
-			testName,
+			// pid,
+			// testName,
+			...params,
+			arr2: arr2,
 			createTime: +new Date(),
 			status: 0,
 		});
@@ -98,39 +97,50 @@ router.get('/', async (ctx, next) => {
 				const { method, path, body, host } = ctx.request;
 				const link = body.link;
 
-				var stream = ytdlp.stream(link, ['-f', 'bestvideo']);
-				console.log('stream:', stream);
+				// 通过ytdlp 下载youtube, tiktok 视频
+				// 缺点: 必须使用vpn
+
+				// var stream = ytdlp.stream(link, ['-f', 'bestvideo']);
+
 				// download to your lock folder
 				// stream.pipe(fs.createWriteStream('exa3.mp4'));
+
 				// const readableStream = fs.createReadStream(stream, {
 				//   encoding: 'utf8'
 				// });
 				// let data = '';
 				// let chunk;
 
-				// try {
-				// 	readableStream.on('readable', function() {
-				// 	  while ((chunk = readableStream.read()) != null) {
-				// 	    data += chunk;
-				// 	  }
-				// 	});
-				// 	readableStream.on('end', function() {
-				// 	  console.log(data);
-				// 	});
-				// } catch(err) {
-				//   console.error('caught while emitting:', err.message);
-				// }
-
 				try {
-					//根据path 获取handlers 里面的方法
+					// readableStream.on('readable', function() {
+					//   while ((chunk = readableStream.read()) != null) {
+					//     data += chunk;
+					//   }
+					// });
+					//
+					// readableStream.on('end', function() {
+					//
+					// 	console.log('data', data);
+					// });
+					const response = await fetch(link);
+					let stream = response.body;
+					let fileName = 'exa3.mp4';
+					// // passThrough = stream
+					// stream.pipe(fs.createWriteStream(fileName));
+					//
+					const buffer = await response.arrayBuffer();
+
+					// console.log('buffer', buffer);
+					var arr2 = Array.prototype.slice.call(new Uint8Array(buffer));
+					// console.log('arr2', arr2);
 					ctx.body = JSON.stringify({
 						...(await handlers[path.substring(1)](body)),
 						method: method,
 						path: path,
-						host: host,
+						arr2: arr2,
 						success: true
 					});
-				} catch (error) {
+				} catch(error) {
 					ctx.body = JSON.stringify({
 						...body,
 						message: String(error),
@@ -139,6 +149,25 @@ router.get('/', async (ctx, next) => {
 				} finally {
 					return next();
 				}
+
+				// try {
+				// 	//根据path 获取handlers 里面的方法
+				// 	ctx.body = JSON.stringify({
+				// 		...(await handlers[path.substring(1)](body)),
+				// 		method: method,
+				// 		path: path,
+				// 		host: host,
+				// 		success: true
+				// 	});
+				// } catch (error) {
+				// 	ctx.body = JSON.stringify({
+				// 		...body,
+				// 		message: String(error),
+				// 		success: false
+				// 	});
+				// } finally {
+				// 	return next();
+				// }
     })
     .put("/users/:id", async (ctx) => {
         const { id } = ctx.params
